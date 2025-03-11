@@ -18,15 +18,20 @@ from sentence_transformers import SentenceTransformer, util
 nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("wordnet")
+
 import os
 import spacy
+import subprocess
 
-# Check if the Spacy model is installed, otherwise install it
+# Ensure Spacy model is installed
+spacy_model = "en_core_web_sm"
+
 try:
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load(spacy_model)
 except OSError:
-    os.system("python -m spacy download en_core_web_sm")  # Download model if missing
-    nlp = spacy.load("en_core_web_sm")  # Load after downloading
+    print(f"Downloading Spacy model: {spacy_model}...")
+    subprocess.run(["python", "-m", "spacy", "download", spacy_model], check=True)
+    nlp = spacy.load(spacy_model)
 
 
 # Load a powerful embedding model
