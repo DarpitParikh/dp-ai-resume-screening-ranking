@@ -18,11 +18,16 @@ from sentence_transformers import SentenceTransformer, util
 nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("wordnet")
+import os
+import spacy
+
+# Check if the Spacy model is installed, otherwise install it
 try:
-    nlp = spacy.load("en_core_web_sm")  # Try to load it if already installed
+    nlp = spacy.load("en_core_web_sm")
 except OSError:
-    from spacy.util import get_package_path
-    nlp = spacy.load(get_package_path("en_core_web_sm"))
+    os.system("python -m spacy download en_core_web_sm")  # Download model if missing
+    nlp = spacy.load("en_core_web_sm")  # Load after downloading
+
 
 # Load a powerful embedding model
 model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
