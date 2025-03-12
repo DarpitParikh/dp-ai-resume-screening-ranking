@@ -5,25 +5,25 @@ import spacy
 import pandas as pd
 import numpy as np
 import re
-import torch
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
-# ✅ Ensure NLTK resources are downloaded
+# Download necessary NLTK resources
 nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("wordnet")
 
-# ✅ Load pre-installed Spacy model
+# Load SpaCy model
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
-    st.error("⚠️ Spacy model not found. Ensure `en_core_web_sm` is in requirements.txt.")
-    raise SystemExit
+    from spacy.cli import download
+    download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
 
-# ✅ Load an embedding model
+# Load embedding model
 model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
 # Function to extract text from PDF
@@ -38,23 +38,20 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error reading PDF: {e}")
     return text
 
-# Function to clean and preprocess text
+# Function to preprocess text
 def preprocess_text(text):
-    """Cleans and preprocesses text for better similarity matching."""
+    """Cleans and preprocesses text."""
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-
     tokens = word_tokenize(text)
     tokens = [word for word in tokens if word not in stopwords.words('english')]
-
     lemmatizer = WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
-
     return ' '.join(tokens)
 
 # Function to calculate semantic similarity
 def calculate_similarity(resumes, job_desc):
-    """Uses sentence embeddings to measure meaning-based similarity."""
+    """Computes similarity scores between resumes and job description."""
     all_texts = resumes + [job_desc]
     embeddings = model.encode(all_texts, convert_to_tensor=True)
     similarity_scores = util.pytorch_cos_sim(embeddings[:-1], embeddings[-1])
@@ -82,6 +79,5 @@ if st.button("Rank Resumes"):
 
         st.write("### 📊 Ranked Resumes:")
         st.dataframe(results)
-
     else:
         st.warning("⚠ Please upload resumes and enter a job description.")
