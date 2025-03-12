@@ -49,15 +49,27 @@ def extract_text_from_pdf(uploaded_file):
     return text
 
 # Function to clean and preprocess text
+import nltk
+from nltk.tokenize import word_tokenize
+
+# Download required NLTK resources
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
+
 def preprocess_text(text):
     """Cleans and preprocesses text for better similarity matching."""
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    tokens = word_tokenize(text)
+    
+    tokens = word_tokenize(text)  # Ensure punkt is downloaded before this
     tokens = [word for word in tokens if word not in stopwords.words('english')]
+    
     lemmatizer = WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
+    
     return ' '.join(tokens)
+
 
 # Function to calculate semantic similarity using Sentence Transformers
 def calculate_similarity(resumes, job_desc):
