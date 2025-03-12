@@ -49,13 +49,15 @@ def extract_text_from_pdf(uploaded_file):
     return text
 
 # Function to clean and preprocess text
+import shutil
 import nltk
-from nltk.tokenize import word_tokenize
 
-# Download required NLTK resources
+# ✅ Forcefully clear old NLTK data and redownload it
+shutil.rmtree(nltk.data.find("tokenizers"), ignore_errors=True)
 nltk.download("punkt")
 nltk.download("stopwords")
 nltk.download("wordnet")
+
 
 def preprocess_text(text):
     """Cleans and preprocesses text for better similarity matching."""
