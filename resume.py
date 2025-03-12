@@ -26,12 +26,8 @@ import subprocess
 # Ensure Spacy model is installed
 spacy_model = "en_core_web_sm"
 
-try:
-    nlp = spacy.load(spacy_model)
-except OSError:
-    print(f"Downloading Spacy model: {spacy_model}...")
-    subprocess.run(["python", "-m", "spacy", "download", spacy_model], check=True)
-    nlp = spacy.load(spacy_model)
+nlp = spacy.load("en_core_web_sm")  # Assume model is pre-installed
+
 
 
 # Load a powerful embedding model
