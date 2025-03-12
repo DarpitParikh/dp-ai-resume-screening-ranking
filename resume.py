@@ -5,42 +5,33 @@ import spacy
 import pandas as pd
 import numpy as np
 import re
+import os
+import subprocess
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
-# Download necessary NLTK resources
-import nltk
-import os
-
+# ✅ Fixing NLTK Issues
 nltk_data_path = os.path.expanduser("~/nltk_data")
 nltk.data.path.append(nltk_data_path)
-
-# Ensure the necessary models are installed
 nltk.download("punkt", download_dir=nltk_data_path)
 nltk.download("stopwords", download_dir=nltk_data_path)
 nltk.download("wordnet", download_dir=nltk_data_path)
 
-
-# Load SpaCy model
-import spacy
-import subprocess
-
+# ✅ Fixing Spacy Issues
 spacy_model = "en_core_web_sm"
-
 try:
     nlp = spacy.load(spacy_model)
 except OSError:
     subprocess.run(["python", "-m", "spacy", "download", spacy_model], check=True)
     nlp = spacy.load(spacy_model)
 
-# Load embedding model
+# ✅ Load Sentence Transformer Model
 model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
-# Function to extract text from PDF
+# ✅ Function to Extract Text from PDF
 def extract_text_from_pdf(uploaded_file):
-    """Extracts text from a PDF file."""
     text = ""
     try:
         pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -50,9 +41,8 @@ def extract_text_from_pdf(uploaded_file):
         st.error(f"Error reading PDF: {e}")
     return text
 
-# Function to preprocess text
+# ✅ Function to Preprocess Text
 def preprocess_text(text):
-    """Cleans and preprocesses text."""
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
     tokens = word_tokenize(text)
@@ -61,17 +51,15 @@ def preprocess_text(text):
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
     return ' '.join(tokens)
 
-# Function to calculate semantic similarity
+# ✅ Function to Calculate Similarity
 def calculate_similarity(resumes, job_desc):
-    """Computes similarity scores between resumes and job description."""
     all_texts = resumes + [job_desc]
     embeddings = model.encode(all_texts, convert_to_tensor=True)
     similarity_scores = util.pytorch_cos_sim(embeddings[:-1], embeddings[-1])
     return similarity_scores.squeeze().tolist()
 
-# Streamlit UI
+# ✅ Streamlit UI
 st.title("📄 AI Resume Screening & Ranking System")
-
 uploaded_files = st.file_uploader("Upload Resumes (Multiple PDFs allowed)", type=["pdf"], accept_multiple_files=True)
 job_description = st.text_area("Enter Job Description")
 
@@ -80,15 +68,12 @@ if st.button("Rank Resumes"):
         resumes_text = [extract_text_from_pdf(file) for file in uploaded_files]
         resumes_cleaned = [preprocess_text(resume) for resume in resumes_text]
         job_desc_cleaned = preprocess_text(job_description)
-
         similarity_scores = calculate_similarity(resumes_cleaned, job_desc_cleaned)
         ranked_indices = np.argsort(similarity_scores)[::-1].tolist()
-
         results = pd.DataFrame({
             'Resume': [uploaded_files[i].name for i in ranked_indices],
             'Similarity Score': [similarity_scores[i] for i in ranked_indices]
         })
-
         st.write("### 📊 Ranked Resumes:")
         st.dataframe(results)
     else:
