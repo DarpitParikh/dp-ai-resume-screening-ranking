@@ -15,11 +15,42 @@ from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
 # Download required NLTK & Spacy models
-import nltk.data
-try:
-    nltk.data.find("tokenizers/punkt")
-except LookupError:
-    raise RuntimeError("NLTK 'punkt' tokenizer is missing. Ensure it is pre-installed.")
+import nltk
+import os
+
+# ✅ Forcefully clear old NLTK data (Fixes "punkt" error)
+nltk_data_dir = os.path.expanduser("~/nltk_data")
+if os.path.exists(nltk_data_dir):
+    import shutil
+    shutil.rmtree(nltk_data_dir)  # Delete corrupted files
+
+# ✅ Redownload all necessary NLTK resources
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
+
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+import re
+
+def preprocess_text(text):
+    """Cleans and preprocesses text for better similarity matching."""
+    text = text.lower()
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+    
+    # ✅ Ensure 'punkt' is available before tokenizing
+    try:
+        tokens = word_tokenize(text)
+    except LookupError:
+        raise RuntimeError("NLTK 'punkt' tokenizer is missing. Ensure it is pre-installed.")
+
+    tokens = [word for word in tokens if word not in stopwords.words('english')]
+    
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(word) for word in tokens]
+    
+    return ' '.join(tokens)
 
 
 import os
