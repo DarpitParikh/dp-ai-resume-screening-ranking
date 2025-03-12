@@ -17,40 +17,26 @@ from sentence_transformers import SentenceTransformer, util
 # Download required NLTK & Spacy models
 import nltk
 import os
+import shutil
 
-# ✅ Forcefully clear old NLTK data (Fixes "punkt" error)
+# ✅ Define NLTK data directory
 nltk_data_dir = os.path.expanduser("~/nltk_data")
+
+# ✅ If the directory exists, remove it to avoid conflicts
 if os.path.exists(nltk_data_dir):
-    import shutil
     shutil.rmtree(nltk_data_dir)  # Delete corrupted files
 
-# ✅ Redownload all necessary NLTK resources
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
+# ✅ Ensure the directory is recreated properly
+os.makedirs(nltk_data_dir, exist_ok=True)
 
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-import re
+# ✅ Set NLTK data path explicitly
+nltk.data.path.append(nltk_data_dir)
 
-def preprocess_text(text):
-    """Cleans and preprocesses text for better similarity matching."""
-    text = text.lower()
-    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    
-    # ✅ Ensure 'punkt' is available before tokenizing
-    try:
-        tokens = word_tokenize(text)
-    except LookupError:
-        raise RuntimeError("NLTK 'punkt' tokenizer is missing. Ensure it is pre-installed.")
+# ✅ Download necessary NLTK resources
+nltk.download("punkt", download_dir=nltk_data_dir)
+nltk.download("stopwords", download_dir=nltk_data_dir)
+nltk.download("wordnet", download_dir=nltk_data_dir)
 
-    tokens = [word for word in tokens if word not in stopwords.words('english')]
-    
-    lemmatizer = WordNetLemmatizer()
-    tokens = [lemmatizer.lemmatize(word) for word in tokens]
-    
-    return ' '.join(tokens)
 
 
 import os
