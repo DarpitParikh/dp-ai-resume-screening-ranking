@@ -15,9 +15,12 @@ from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
 # Download required NLTK & Spacy models
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
+import nltk.data
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    raise RuntimeError("NLTK 'punkt' tokenizer is missing. Ensure it is pre-installed.")
+
 
 import os
 import spacy
