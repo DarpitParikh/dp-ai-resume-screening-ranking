@@ -11,17 +11,29 @@ from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
 # Download necessary NLTK resources
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
+import nltk
+import os
+
+nltk_data_path = os.path.expanduser("~/nltk_data")
+nltk.data.path.append(nltk_data_path)
+
+# Ensure the necessary models are installed
+nltk.download("punkt", download_dir=nltk_data_path)
+nltk.download("stopwords", download_dir=nltk_data_path)
+nltk.download("wordnet", download_dir=nltk_data_path)
+
 
 # Load SpaCy model
+import spacy
+import subprocess
+
+spacy_model = "en_core_web_sm"
+
 try:
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.load(spacy_model)
 except OSError:
-    from spacy.cli import download
-    download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+    subprocess.run(["python", "-m", "spacy", "download", spacy_model], check=True)
+    nlp = spacy.load(spacy_model)
 
 # Load embedding model
 model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
