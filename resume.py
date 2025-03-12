@@ -11,21 +11,16 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
-# ✅ Set a fixed NLTK data directory
-NLTK_DATA_DIR = "/home/appuser/nltk_data"
-nltk.data.path.append(NLTK_DATA_DIR)
+# ✅ Ensure NLTK resources are downloaded
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download("wordnet")
 
-# ✅ Download necessary NLTK resources only if not found
-nltk.download("punkt", download_dir=NLTK_DATA_DIR)
-nltk.download("stopwords", download_dir=NLTK_DATA_DIR)
-nltk.download("wordnet", download_dir=NLTK_DATA_DIR)
-
-# ✅ Ensure Spacy model is available
-SPACY_MODEL = "en_core_web_sm"
+# ✅ Load pre-installed Spacy model
 try:
-    nlp = spacy.load(SPACY_MODEL)
+    nlp = spacy.load("en_core_web_sm")
 except OSError:
-    st.error(f"⚠️ Missing SpaCy model: {SPACY_MODEL}. Run `python -m spacy download {SPACY_MODEL}`.")
+    st.error("⚠️ Spacy model not found. Ensure `en_core_web_sm` is in requirements.txt.")
     raise SystemExit
 
 # ✅ Load an embedding model
