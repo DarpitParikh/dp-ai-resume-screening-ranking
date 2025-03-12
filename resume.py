@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""AI Resume Screening & Ranking System"""
-
-# Install necessary libraries
 import streamlit as st
 import PyPDF2
 import nltk
@@ -9,48 +5,30 @@ import spacy
 import pandas as pd
 import numpy as np
 import re
+import torch
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer, util
 
-# Download required NLTK & Spacy models
-import nltk
-import os
-import shutil
+# ✅ Set a fixed NLTK data directory
+NLTK_DATA_DIR = "/home/appuser/nltk_data"
+nltk.data.path.append(NLTK_DATA_DIR)
 
-# ✅ Define NLTK data directory
-nltk_data_dir = os.path.expanduser("~/nltk_data")
+# ✅ Download necessary NLTK resources only if not found
+nltk.download("punkt", download_dir=NLTK_DATA_DIR)
+nltk.download("stopwords", download_dir=NLTK_DATA_DIR)
+nltk.download("wordnet", download_dir=NLTK_DATA_DIR)
 
-# ✅ If the directory exists, remove it to avoid conflicts
-if os.path.exists(nltk_data_dir):
-    shutil.rmtree(nltk_data_dir)  # Delete corrupted files
+# ✅ Ensure Spacy model is available
+SPACY_MODEL = "en_core_web_sm"
+try:
+    nlp = spacy.load(SPACY_MODEL)
+except OSError:
+    st.error(f"⚠️ Missing SpaCy model: {SPACY_MODEL}. Run `python -m spacy download {SPACY_MODEL}`.")
+    raise SystemExit
 
-# ✅ Ensure the directory is recreated properly
-os.makedirs(nltk_data_dir, exist_ok=True)
-
-# ✅ Set NLTK data path explicitly
-nltk.data.path.append(nltk_data_dir)
-
-# ✅ Download necessary NLTK resources
-nltk.download("punkt", download_dir=nltk_data_dir)
-nltk.download("stopwords", download_dir=nltk_data_dir)
-nltk.download("wordnet", download_dir=nltk_data_dir)
-
-
-
-import os
-import spacy
-import subprocess
-
-# Ensure Spacy model is installed
-spacy_model = "en_core_web_sm"
-
-nlp = spacy.load("en_core_web_sm")  # Assume model is pre-installed
-
-
-
-# Load a powerful embedding model
+# ✅ Load an embedding model
 model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
 # Function to extract text from PDF
@@ -66,37 +44,26 @@ def extract_text_from_pdf(uploaded_file):
     return text
 
 # Function to clean and preprocess text
-import shutil
-import nltk
-
-# ✅ Forcefully clear old NLTK data and redownload it
-shutil.rmtree(nltk.data.find("tokenizers"), ignore_errors=True)
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("wordnet")
-
-
 def preprocess_text(text):
     """Cleans and preprocesses text for better similarity matching."""
     text = text.lower()
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
-    
-    tokens = word_tokenize(text)  # Ensure punkt is downloaded before this
+
+    tokens = word_tokenize(text)
     tokens = [word for word in tokens if word not in stopwords.words('english')]
-    
+
     lemmatizer = WordNetLemmatizer()
     tokens = [lemmatizer.lemmatize(word) for word in tokens]
-    
+
     return ' '.join(tokens)
 
-
-# Function to calculate semantic similarity using Sentence Transformers
+# Function to calculate semantic similarity
 def calculate_similarity(resumes, job_desc):
     """Uses sentence embeddings to measure meaning-based similarity."""
-    all_texts = resumes + [job_desc]  # Combine resumes & job description
-    embeddings = model.encode(all_texts, convert_to_tensor=True)  # Convert text to embeddings
-    similarity_scores = util.pytorch_cos_sim(embeddings[:-1], embeddings[-1])  # Compare with job description
-    return similarity_scores.squeeze().tolist()  # Return similarity scores
+    all_texts = resumes + [job_desc]
+    embeddings = model.encode(all_texts, convert_to_tensor=True)
+    similarity_scores = util.pytorch_cos_sim(embeddings[:-1], embeddings[-1])
+    return similarity_scores.squeeze().tolist()
 
 # Streamlit UI
 st.title("📄 AI Resume Screening & Ranking System")
@@ -111,10 +78,10 @@ if st.button("Rank Resumes"):
         job_desc_cleaned = preprocess_text(job_description)
 
         similarity_scores = calculate_similarity(resumes_cleaned, job_desc_cleaned)
-        ranked_indices = np.argsort(similarity_scores)[::-1].tolist()  # Convert to a Python list
+        ranked_indices = np.argsort(similarity_scores)[::-1].tolist()
 
         results = pd.DataFrame({
-            'Resume': [uploaded_files[i].name for i in ranked_indices],  # Ensure index is an integer
+            'Resume': [uploaded_files[i].name for i in ranked_indices],
             'Similarity Score': [similarity_scores[i] for i in ranked_indices]
         })
 
